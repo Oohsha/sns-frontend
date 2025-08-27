@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { Post } from '@/types'; // 👈 전역 Post 타입 import
 
 interface PostFormProps {
-  onPostCreated: (newPost: any) => void;
+  onPostCreated: (newPost: Post) => void; // 👈 any 대신 Post 타입 사용
 }
 
 export default function PostForm({ onPostCreated }: PostFormProps) {
@@ -30,7 +31,6 @@ export default function PostForm({ onPostCreated }: PostFormProps) {
       toast.error('내용이나 이미지를 추가해주세요.');
       return;
     }
-
     setIsSubmitting(true);
     const token = localStorage.getItem('accessToken');
     if (!token) {
@@ -38,20 +38,17 @@ export default function PostForm({ onPostCreated }: PostFormProps) {
       setIsSubmitting(false);
       return;
     }
-
     const formData = new FormData();
     formData.append('content', content);
     if (imageFile) {
       formData.append('image', imageFile);
     }
+
     const promise = axios.post(
       'http://localhost:3001/posts',
       formData,
       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
       }
     );
 
@@ -66,11 +63,12 @@ export default function PostForm({ onPostCreated }: PostFormProps) {
       },
       error: '게시글 작성에 실패했습니다.',
     });
-
+    
     setIsSubmitting(false);
   };
 
   return (
+    // ... (PostForm의 JSX는 이전과 동일)
     <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-6 border dark:border-gray-700">
       <form onSubmit={handleSubmit}>
         <textarea
@@ -80,7 +78,7 @@ export default function PostForm({ onPostCreated }: PostFormProps) {
           className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-transparent"
           rows={3}
         />
-        {imagePreview && ( <div className="mt-2 relative"> <img src={imagePreview} alt="Preview" className="max-h-40 rounded-md" /> <button onClick={() => { setImageFile(null); setImagePreview(null); }} className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full p-0.5">&times;</button> </div> )}
+        {imagePreview && ( <div className="mt-2 relative"> <img src={imagePreview} alt="Preview" className="max-h-40 rounded-md" /> <button type="button" onClick={() => { setImageFile(null); setImagePreview(null); }} className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full p-0.5">&times;</button> </div> )}
         <div className="flex justify-between items-center mt-2">
           <input type="file" id="image" accept="image/*" onChange={handleFileChange} className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
           <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-400">

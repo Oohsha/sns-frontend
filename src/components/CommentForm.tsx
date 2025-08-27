@@ -1,17 +1,17 @@
-// src/components/CommentForm.tsx
 'use client';
 
 import { useState } from 'react';
+import axios from 'axios'; // 👈 require 대신 import 사용
+import toast from 'react-hot-toast';
 
 interface CommentFormProps {
   postId: number;
-  onCommentCreated: () => void; // 댓글 생성 성공 시 부모에게 알릴 함수
+  onCommentCreated: () => void;
 }
 
 export default function CommentForm({ postId, onCommentCreated }: CommentFormProps) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const axios = require('axios'); // axios import for local scope
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,25 +20,28 @@ export default function CommentForm({ postId, onCommentCreated }: CommentFormPro
     setIsSubmitting(true);
     const token = localStorage.getItem('accessToken');
     if (!token) {
-      alert('댓글을 작성하려면 로그인이 필요합니다.');
+      toast.error('댓글을 작성하려면 로그인이 필요합니다.');
       setIsSubmitting(false);
       return;
     }
 
-    try {
-      await axios.post(
-        `http://localhost:3001/posts/${postId}/comments`,
-        { content },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setContent('');
-      onCommentCreated(); // 부모에게 댓글이 생성되었음을 알림
-    } catch (error) {
-      console.error('댓글 작성 실패:', error);
-      alert('댓글 작성에 실패했습니다.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    const promise = axios.post(
+      `http://localhost:3001/posts/${postId}/comments`,
+      { content },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    toast.promise(promise, {
+        loading: '댓글 등록 중...',
+        success: () => {
+            setContent('');
+            onCommentCreated();
+            return '댓글이 등록되었습니다!';
+        },
+        error: '댓글 등록에 실패했습니다.',
+    });
+    
+    setIsSubmitting(false);
   };
 
   return (
@@ -47,7 +50,7 @@ export default function CommentForm({ postId, onCommentCreated }: CommentFormPro
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="댓글을 남겨보세요..."
-        className="w-full p-2 border border-gray-300 rounded-md"
+        className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600"
         rows={2}
         required
       />
