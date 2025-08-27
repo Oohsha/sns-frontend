@@ -1,8 +1,7 @@
-/** @type {import('postcss-load-config').Config} */
-const config = {
-  plugins: {
-    tailwindcss: {}, // 이 부분만 수정
-    autoprefixer: {},
-  },
+// next.config.mjs
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // experimental 객체 전체를 지우거나 비워둡니다.
 };
-export default config;
+
+export default nextConfig;
