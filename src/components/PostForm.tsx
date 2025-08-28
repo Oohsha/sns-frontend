@@ -44,8 +44,9 @@ export default function PostForm({ onPostCreated }: PostFormProps) {
       formData.append('image', imageFile);
     }
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     const promise = axios.post(
-      'http://localhost:3001/posts',
+      `${apiUrl}/posts`,
       formData,
       {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },

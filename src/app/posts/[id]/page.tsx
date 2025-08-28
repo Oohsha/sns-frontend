@@ -47,10 +47,11 @@ export default function PostDetailPage() {
     setLoading(true);
     const token = localStorage.getItem('accessToken');
     
-    const postPromise = axios.get(`http://localhost:3001/posts/${id}`);
-    const commentsPromise = axios.get(`http://localhost:3001/posts/${id}/comments`);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const postPromise = axios.get(`${apiUrl}/posts/${id}`);
+    const commentsPromise = axios.get(`${apiUrl}/posts/${id}/comments`);
     const userPromise = token 
-      ? axios.get('http://localhost:3001/user/me', { headers: { Authorization: `Bearer ${token}` } }) 
+      ? axios.get(`${apiUrl}/user/me`, { headers: { Authorization: `Bearer ${token}` } }) 
       : Promise.resolve(null);
 
     try {
@@ -87,7 +88,8 @@ export default function PostDetailPage() {
   
   const refreshComments = async () => {
     try {
-      const response = await axios.get(`http://localhost:3001/posts/${id}/comments`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await axios.get(`${apiUrl}/posts/${id}/comments`);
       setComments(response.data);
     } catch (error) {
       console.error('댓글 목록 새로고침 실패:', error);
@@ -104,7 +106,8 @@ export default function PostDetailPage() {
       const token = localStorage.getItem('accessToken');
       if (!token) { alert('로그인이 필요합니다.'); return; }
       try {
-        await axios.delete(`http://localhost:3001/posts/${post.id}`, { headers: { Authorization: `Bearer ${token}` } });
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        await axios.delete(`${apiUrl}/posts/${post.id}`, { headers: { Authorization: `Bearer ${token}` } });
         alert('게시글이 삭제되었습니다.');
         router.push('/');
       } catch (error) {
@@ -130,7 +133,7 @@ export default function PostDetailPage() {
     if (!token) { alert('로그인이 필요합니다.'); return; }
     try {
       const response = await axios.patch(
-        `http://localhost:3001/posts/${post.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/posts/${post.id}`,
         { content: editedContent },
         { headers: { Authorization: `Bearer ${token}` } }
       );

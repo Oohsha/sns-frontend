@@ -25,8 +25,9 @@ export default function CommentForm({ postId, onCommentCreated }: CommentFormPro
       return;
     }
 
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     const promise = axios.post(
-      `http://localhost:3001/posts/${postId}/comments`,
+      `${apiUrl}/posts/${postId}/comments`,
       { content },
       { headers: { Authorization: `Bearer ${token}` } }
     );
