@@ -7,15 +7,13 @@ import PostForm from '@/components/PostForm';
 import { useInView } from 'react-intersection-observer';
 import { Post } from '@/types';
 import PostCard from '@/components/PostCard';
-import { unstable_noStore as noStore } from 'next/cache'; // 👈 noStore import
 
 const PAGE_LIMIT = 5;
 
 export default function HomePage() {
-  noStore(); // 👈 동적 렌더링 강제
-
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [feedType, setFeedType] = useState<'personal' | 'global'>('global');
   const [page, setPage] = useState(1);
@@ -23,14 +21,25 @@ export default function HomePage() {
   const { ref, inView } = useInView({ threshold: 0.5 });
 
   const fetchPosts = useCallback(async (pageNum: number, type: 'personal' | 'global', isNewFeed: boolean) => {
-    if (isNewFeed) setLoading(true);
-
+    if (isNewFeed) {
+      setLoading(true);
+      setError(null);
+    }
     const token = localStorage.getItem('accessToken');
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+    if (!apiUrl) {
+      setError("API 서버 주소가 설정되지 않았습니다. 관리자에게 문의하세요.");
+      setLoading(false);
+      setHasMore(false);
+      return;
+    }
+
     let endpoint = '';
     if (type === 'personal' && token) {
-      endpoint = `${process.env.NEXT_PUBLIC_API_URL}/posts/feed?page=${pageNum}&limit=${PAGE_LIMIT}`;
+      endpoint = `${apiUrl}/posts/feed?page=${pageNum}&limit=${PAGE_LIMIT}`;
     } else {
-      endpoint = `${process.env.NEXT_PUBLIC_API_URL}/posts?page=${pageNum}&limit=${PAGE_LIMIT}`;
+      endpoint = `${apiUrl}/posts?page=${pageNum}&limit=${PAGE_LIMIT}`;
     }
     const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
     
@@ -40,9 +49,9 @@ export default function HomePage() {
       if (newPosts.length < PAGE_LIMIT) setHasMore(false);
       setPosts(prev => isNewFeed ? newPosts : [...prev, ...newPosts]);
       setPage(prev => pageNum + 1);
-    } catch (error) { 
-      console.error('게시글 로딩 실패:', error);
-      // API 호출 실패 시 hasMore를 false로 설정하여 추가 로딩 방지
+    } catch (err) { 
+      console.error('게시글 로딩 실패:', err);
+      setError("게시글을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
       setHasMore(false);
     }
     finally { if (isNewFeed) setLoading(false); }
@@ -82,6 +91,14 @@ export default function HomePage() {
     }
   };
 
+  if (error) {
+    return <div className="text-center mt-10 text-red-500">에러: {error}</div>;
+  }
+  
+  if (loading && page === 1) {
+    return <div className="text-center mt-10">로딩 중...</div>;
+  }
+  
   return (
     <div className="container mx-auto p-4 max-w-xl">
       {isLoggedIn && (
@@ -97,8 +114,7 @@ export default function HomePage() {
 
       {isLoggedIn && feedType === 'personal' && <PostForm onPostCreated={handlePostCreated} />}
       
-      {(loading && page === 1) ? <div className="text-center mt-10">로딩 중...</div> :
-       posts.length === 0 ? <div className="text-center mt-10 text-gray-500">{isLoggedIn ? '표시할 게시글이 없습니다.' : '게시글이 없습니다.'}</div> : (
+       {posts.length === 0 && !loading ? <div className="text-center mt-10 text-gray-500">{isLoggedIn ? '표시할 게시글이 없습니다.' : '게시글이 없습니다.'}</div> : (
         <div className="space-y-6">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />
