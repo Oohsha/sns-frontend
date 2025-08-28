@@ -13,7 +13,7 @@ export default function ExplorePage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/user');
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user`);
         setUsers(response.data);
       } catch (error) {
         console.error('사용자 목록을 불러오는 데 실패했습니다:', error);

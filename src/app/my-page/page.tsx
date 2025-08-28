@@ -31,7 +31,7 @@ export default function MyPage() {
 
       try {
         // 2. 토큰을 Authorization 헤더에 담아 '내 정보 조회' API를 호출합니다.
-        const response = await axios.get('http://localhost:3001/user/me', {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user/me`, {
           headers: {
             Authorization: `Bearer ${token}`, // Bearer 토큰 형식
           },

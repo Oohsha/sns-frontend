@@ -38,8 +38,8 @@ export default function ProfilePage() {
     const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
     try {
       const [profileResponse, userResponse] = await Promise.all([
-        axios.get(`http://localhost:3001/profiles/${nickname}`, config),
-        token ? axios.get('http://localhost:3001/user/me', config) : Promise.resolve(null),
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/profiles/${nickname}`, config),
+        token ? axios.get(`${process.env.NEXT_PUBLIC_API_URL}/user/me`, config) : Promise.resolve(null),
       ]);
       setProfile(profileResponse.data);
       if (userResponse) setCurrentUser(userResponse.data);
@@ -61,7 +61,7 @@ export default function ProfilePage() {
       return;
     }
     const token = localStorage.getItem('accessToken');
-    const endpoint = `http://localhost:3001/profiles/${profile.nickname}/follow`;
+    const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/profiles/${profile.nickname}/follow`;
     
     try {
       // Optimistic Update (UI 즉시 변경)

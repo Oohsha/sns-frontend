@@ -22,7 +22,7 @@ export default function CommentList({ comments, currentUser, onCommentDeleted }:
         return;
     }
 
-    const promise = axios.delete(`http://localhost:3001/comments/${commentId}`, {
+    const promise = axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/comments/${commentId}`, {
         headers: { Authorization: `Bearer ${token}` }
     });
 

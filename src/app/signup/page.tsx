@@ -20,7 +20,7 @@ export default function SignUpPage() {
     try {
       // 3. 백엔드 API로 회원가입 요청을 보냅니다. (await 사용)
       const response = await axios.post(
-        'http://localhost:3001/auth/signup', // 백엔드 포트는 3001
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/signup`,
         {
           email,
           password,
