@@ -5,12 +5,15 @@ import axios from 'axios';
 import Link from 'next/link';
 import PostForm from '@/components/PostForm';
 import { useInView } from 'react-intersection-observer';
-import { Post } from '@/types'; // 전역 타입 사용
+import { Post } from '@/types';
 import PostCard from '@/components/PostCard';
+import { unstable_noStore as noStore } from 'next/cache'; // 👈 noStore import
 
 const PAGE_LIMIT = 5;
 
 export default function HomePage() {
+  noStore(); // 👈 동적 렌더링 강제
+
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
@@ -21,21 +24,27 @@ export default function HomePage() {
 
   const fetchPosts = useCallback(async (pageNum: number, type: 'personal' | 'global', isNewFeed: boolean) => {
     if (isNewFeed) setLoading(true);
+
     const token = localStorage.getItem('accessToken');
     let endpoint = '';
     if (type === 'personal' && token) {
-      endpoint = `http://localhost:3001/posts/feed?page=${pageNum}&limit=${PAGE_LIMIT}`;
+      endpoint = `${process.env.NEXT_PUBLIC_API_URL}/posts/feed?page=${pageNum}&limit=${PAGE_LIMIT}`;
     } else {
-      endpoint = `http://localhost:3001/posts?page=${pageNum}&limit=${PAGE_LIMIT}`;
+      endpoint = `${process.env.NEXT_PUBLIC_API_URL}/posts?page=${pageNum}&limit=${PAGE_LIMIT}`;
     }
     const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    
     try {
       const response = await axios.get(endpoint, config);
       const newPosts = response.data;
       if (newPosts.length < PAGE_LIMIT) setHasMore(false);
       setPosts(prev => isNewFeed ? newPosts : [...prev, ...newPosts]);
       setPage(prev => pageNum + 1);
-    } catch (error) { console.error('게시글 로딩 실패:', error); }
+    } catch (error) { 
+      console.error('게시글 로딩 실패:', error);
+      // API 호출 실패 시 hasMore를 false로 설정하여 추가 로딩 방지
+      setHasMore(false);
+    }
     finally { if (isNewFeed) setLoading(false); }
   }, []);
   
@@ -65,14 +74,10 @@ export default function HomePage() {
     }
   }, [inView, loading, hasMore, page, feedType, fetchPosts]);
 
-  // 👇 handlePostCreated 함수 수정됨
-  const handlePostCreated = (newPost: Post) => { // any 대신 Post 타입 사용
-    // 현재 '내 피드'를 보고 있다면, 피드를 새로 불러오는 대신
-    // 받아온 새 게시글을 기존 목록 맨 앞에 추가하여 더 나은 UX를 제공합니다.
+  const handlePostCreated = (newPost: Post) => {
     if (feedType === 'personal') {
       setPosts((prevPosts) => [newPost, ...prevPosts]);
     } else {
-      // '전체 피드'를 보고 있었다면, '내 피드'로 전환하여 새 글을 보여줍니다.
       setFeedType('personal');
     }
   };
