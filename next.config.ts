@@ -1,10 +1,17 @@
-// next.config.mjs
+// next.config.ts
+
+import { NextConfig } from 'next';
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  // 👇 이 부분을 추가합니다.
-  experimental: {
-    outputFileTracingRoot: __dirname,
+const nextConfig: NextConfig = {
+  // Cloudinary 이미지 사용을 위한 설정
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+    ],
   },
 };
 
